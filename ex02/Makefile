@@ -1,4 +1,4 @@
-NAME        = PmergeMe 
+NAME        = PmergeMe
 
 CXX         = c++
 CXXFLAGS    = -Wall -Wextra -Werror -std=c++98
@@ -27,4 +27,7 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+debug: CXXFLAGS += -DDEBUG
+debug: re
+
+.PHONY: all clean fclean re debug

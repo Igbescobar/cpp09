@@ -6,7 +6,7 @@
 /*   By: igngonza <igngonza@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/11 11:59:26 by igngonza          #+#    #+#             */
-/*   Updated: 2026/02/17 11:59:09 by igngonza         ###   ########.fr       */
+/*   Updated: 2026/02/20 12:27:21 by igngonza         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,22 @@
 PmergeMe::PmergeMe() : comparisonCountVector(0), comparisonCountDeque(0)
 {
 }
+
+PmergeMe::PmergeMe(const PmergeMe &other) : comparisonCountVector(other.comparisonCountVector),
+	comparisonCountDeque(other.comparisonCountDeque)
+{
+}
+
+PmergeMe &PmergeMe::operator=(const PmergeMe &other)
+{
+	if (this != &other)
+	{
+		comparisonCountVector = other.comparisonCountVector;
+		comparisonCountDeque = other.comparisonCountDeque;
+	}
+	return (*this);
+}
+
 PmergeMe::~PmergeMe()
 {
 }
@@ -40,16 +56,43 @@ bool PmergeMe::compareDeque(int a, int b)
 	return (a < b);
 }
 
+double PmergeMe::elapsedUs(struct timeval start, struct timeval end)
+{
+	return (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec
+		- start.tv_usec);
+}
+
+void PmergeMe::printTime(size_t size, const std::string &container, double time)
+{
+	std::cout << "Time to process a range of " << size << " elements with std::" << container << " : " << std::fixed << std::setprecision(5) << time << " us" << std::endl;
+}
+
+double PmergeMe::timeSort(std::vector<int> &input, std::vector<int> &output)
+{
+	struct timeval start, end;
+	comparisonCountVector = 0;
+	gettimeofday(&start, NULL);
+	output = sortWithVector(input);
+	gettimeofday(&end, NULL);
+	return (elapsedUs(start, end));
+}
+
+double PmergeMe::timeSortDeque(std::vector<int> &input, std::deque<int> &output)
+{
+	struct timeval start, end;
+	comparisonCountDeque = 0;
+	std::deque<int> deqInput(input.begin(), input.end());
+	gettimeofday(&start, NULL);
+	output = sortWithDeque(deqInput);
+	gettimeofday(&end, NULL);
+	return (elapsedUs(start, end));
+}
+
 void PmergeMe::sort(int argc, char **argv)
 {
 	double	timeVec;
 	double	timeDeq;
 
-	if (argc < 2)
-	{
-		std::cerr << "Error" << std::endl;
-		return ;
-	}
 	std::vector<int> input = parseInput(argc, argv);
 	if (input.empty())
 	{
@@ -58,41 +101,31 @@ void PmergeMe::sort(int argc, char **argv)
 	}
 	std::cout << "Before: ";
 	displaySequence(input);
-	comparisonCountVector = 0;
-	comparisonCountDeque = 0;
-	std::vector<int> vecInput = input;
-	struct timeval startVec, endVec;
-	gettimeofday(&startVec, NULL);
-	std::vector<int> sortedVec = sortWithVector(vecInput);
-	gettimeofday(&endVec, NULL);
-	timeVec = (endVec.tv_sec - startVec.tv_sec) * 1000000.0 + (endVec.tv_usec
-			- startVec.tv_usec);
+	std::vector<int> sortedVec;
+	timeVec = timeSort(input, sortedVec);
 	std::cout << "After:  ";
 	displaySequence(sortedVec);
-	std::deque<int> deqInput(input.begin(), input.end());
-	struct timeval startDeq, endDeq;
-	gettimeofday(&startDeq, NULL);
-	std::deque<int> sortedDeq = sortWithDeque(deqInput);
-	gettimeofday(&endDeq, NULL);
-	timeDeq = (endDeq.tv_sec - startDeq.tv_sec) * 1000000.0 + (endDeq.tv_usec
-			- startDeq.tv_usec);
-	std::cout << "Time to process a range of " << input.size() << " elements with std::vector : " << std::fixed << std::setprecision(2) << timeVec << " us" << std::endl;
-	std::cout << "Time to process a range of " << input.size() << " elements with std::deque  : " << std::fixed << std::setprecision(2) << timeDeq << " us" << std::endl;
+	std::deque<int> sortedDeq;
+	timeDeq = timeSortDeque(input, sortedDeq);
+	printTime(input.size(), "vector", timeVec);
+	printTime(input.size(), "deque ", timeDeq);
+#ifdef DEBUG
 	std::cout << "Number of comparisons (vector): " << comparisonCountVector << std::endl;
 	std::cout << "Number of comparisons (deque):  " << comparisonCountDeque << std::endl;
+#endif
 }
 
 std::vector<int> PmergeMe::sortWithVector(std::vector<int> &input)
 {
 	if (input.size() <= 1)
 		return (input);
-	std::vector<std::pair<int, size_t>> indexedInput;
+	std::vector<std::pair<int, size_t> > indexedInput;
 	for (size_t i = 0; i < input.size(); ++i)
 	{
 		indexedInput.push_back(std::make_pair(input[i], i));
 	}
 	std::vector<std::pair<int,
-		size_t>> sortedIndexed = sortWithIndex(indexedInput);
+		size_t> > sortedIndexed = sortWithIndex(indexedInput);
 	std::vector<int> result;
 	for (size_t i = 0; i < sortedIndexed.size(); ++i)
 	{
@@ -102,14 +135,14 @@ std::vector<int> PmergeMe::sortWithVector(std::vector<int> &input)
 }
 
 std::vector<std::pair<int,
-	size_t>> PmergeMe::sortWithIndex(std::vector<std::pair<int, size_t>> &input)
+	size_t> > PmergeMe::sortWithIndex(std::vector<std::pair<int, size_t> > &input)
 {
 	bool	hasStraggler;
 
 	if (input.size() <= 1)
 		return (input);
 	std::vector<std::pair<std::pair<int, size_t>, std::pair<int,
-		size_t>>> pairs;
+		size_t> > > pairs;
 	std::pair<int, size_t> straggler = std::make_pair(-1, 0);
 	hasStraggler = false;
 	for (size_t i = 0; i < input.size(); i += 2)
@@ -117,13 +150,9 @@ std::vector<std::pair<int,
 		if (i + 1 < input.size())
 		{
 			if (compareVector(input[i + 1].first, input[i].first))
-			{
 				pairs.push_back(std::make_pair(input[i], input[i + 1]));
-			}
 			else
-			{
 				pairs.push_back(std::make_pair(input[i + 1], input[i]));
-			}
 		}
 		else
 		{
@@ -131,21 +160,21 @@ std::vector<std::pair<int,
 			hasStraggler = true;
 		}
 	}
-	std::vector<std::pair<int, size_t>> largerElements;
+	std::vector<std::pair<int, size_t> > largerElements;
 	for (size_t i = 0; i < pairs.size(); ++i)
 	{
 		largerElements.push_back(pairs[i].first);
 	}
 	// recursive call to sort larger elements
 	std::vector<std::pair<int,
-		size_t>> mainChain = sortWithIndex(largerElements);
-	std::vector<std::pair<int, size_t>> pending;
+		size_t> > mainChain = sortWithIndex(largerElements);
+	std::vector<std::pair<int, size_t> > pending;
 	for (size_t i = 0; i < pairs.size(); ++i)
 	{
 		pending.push_back(pairs[i].second);
 	}
 	// reorder pending to have the same order of initial pairs
-	std::vector<std::pair<int, size_t>> reorderedPending;
+	std::vector<std::pair<int, size_t> > reorderedPending;
 	for (size_t i = 0; i < mainChain.size(); ++i)
 	{
 		for (size_t j = 0; j < largerElements.size(); ++j)
@@ -158,35 +187,29 @@ std::vector<std::pair<int,
 		}
 	}
 	if (hasStraggler)
-	{
 		reorderedPending.push_back(straggler);
-	}
 	std::vector<std::pair<int,
-		size_t>> result = insertPendingWithIndex(mainChain, reorderedPending);
+		size_t> > result = insertPendingWithIndex(mainChain, reorderedPending);
 	return (result);
 }
 
 std::vector<std::pair<int,
-	size_t>> PmergeMe::insertPendingWithIndex(std::vector<std::pair<int,
-	size_t>> &mainChain, std::vector<std::pair<int, size_t>> &pending)
+	size_t> > PmergeMe::insertPendingWithIndex(std::vector<std::pair<int,
+	size_t> > &mainChain, std::vector<std::pair<int, size_t> > &pending)
 {
 	size_t	pendingIndex;
-		size_t pairPosition;
+	size_t	pairPosition;
 	size_t	pos;
 
 	if (pending.empty())
 		return (mainChain);
-	std::vector<std::pair<int, size_t>> result = mainChain;
+	std::vector<std::pair<int, size_t> > result = mainChain;
 	std::vector<size_t> mainChainPositions(mainChain.size());
 	for (size_t i = 0; i < mainChain.size(); ++i)
-	{
 		mainChainPositions[i] = i;
-	}
 	result.insert(result.begin(), pending[0]);
 	for (size_t i = 0; i < mainChainPositions.size(); ++i)
-	{
 		mainChainPositions[i]++;
-	}
 	if (pending.size() == 1)
 		return (result);
 	std::vector<size_t> insertionOrder = buildInsertionOrder(pending.size());
@@ -196,22 +219,16 @@ std::vector<std::pair<int,
 		std::pair<int, size_t> valueToInsert = pending[pendingIndex];
 		// Straggler has no pair in mainChain — search the entire result
 		if (pendingIndex < mainChainPositions.size())
-		{
 			pairPosition = mainChainPositions[pendingIndex];
-		}
 		else
-		{
 			pairPosition = result.size();
-		}
 		pos = binarySearchWithIndex(result, valueToInsert.first, pairPosition,
 				pairPosition);
 		result.insert(result.begin() + pos, valueToInsert);
 		for (size_t j = 0; j < mainChainPositions.size(); ++j)
 		{
 			if (mainChainPositions[j] >= pos)
-			{
 				mainChainPositions[j]++;
-			}
 		}
 	}
 	return (result);
@@ -266,7 +283,7 @@ std::vector<size_t> PmergeMe::buildInsertionOrder(size_t pendingSize)
 }
 
 size_t PmergeMe::binarySearchWithIndex(const std::vector<std::pair<int,
-	size_t>> &arr, int value, size_t end, size_t pairPos)
+	size_t> > &arr, int value, size_t end, size_t pairPos)
 {
 	size_t	left;
 	size_t	right;
@@ -278,19 +295,13 @@ size_t PmergeMe::binarySearchWithIndex(const std::vector<std::pair<int,
 	{
 		mid = left + (right - left) / 2;
 		if (mid == pairPos)
-		{
 			right = mid;
-		}
 		else
 		{
 			if (compareVector(arr[mid].first, value))
-			{
 				left = mid + 1;
-			}
 			else
-			{
 				right = mid;
-			}
 		}
 	}
 	return (left);
@@ -315,7 +326,7 @@ void PmergeMe::validateInput(const std::string &str)
 
 std::vector<int> PmergeMe::parseInput(int argc, char **argv)
 {
-			int num;
+	int	num;
 
 	std::vector<int> result;
 	try
@@ -352,30 +363,26 @@ std::deque<int> PmergeMe::sortWithDeque(std::deque<int> &input)
 {
 	if (input.size() <= 1)
 		return (input);
-	std::deque<std::pair<int, size_t>> indexedInput;
+	std::deque<std::pair<int, size_t> > indexedInput;
 	for (size_t i = 0; i < input.size(); ++i)
-	{
 		indexedInput.push_back(std::make_pair(input[i], i));
-	}
 	std::deque<std::pair<int,
-		size_t>> sortedIndexed = sortWithIndexDeque(indexedInput);
+		size_t> > sortedIndexed = sortWithIndexDeque(indexedInput);
 	std::deque<int> result;
 	for (size_t i = 0; i < sortedIndexed.size(); ++i)
-	{
 		result.push_back(sortedIndexed[i].first);
-	}
-	return result;
+	return (result);
 }
 
 std::deque<std::pair<int,
-	size_t>> PmergeMe::sortWithIndexDeque(std::deque<std::pair<int,
-	size_t>> &input)
+	size_t> > PmergeMe::sortWithIndexDeque(std::deque<std::pair<int,
+	size_t> > &input)
 {
 	bool	hasStraggler;
 
 	if (input.size() <= 1)
-		return input;
-	std::deque<std::pair<std::pair<int, size_t>, std::pair<int, size_t>>> pairs;
+		return (input);
+	std::deque<std::pair<std::pair<int, size_t>, std::pair<int, size_t> > > pairs;
 	std::pair<int, size_t> straggler = std::make_pair(-1, 0);
 	hasStraggler = false;
 	for (size_t i = 0; i < input.size(); i += 2)
@@ -383,13 +390,9 @@ std::deque<std::pair<int,
 		if (i + 1 < input.size())
 		{
 			if (compareDeque(input[i + 1].first, input[i].first))
-			{
 				pairs.push_back(std::make_pair(input[i], input[i + 1]));
-			}
 			else
-			{
 				pairs.push_back(std::make_pair(input[i + 1], input[i]));
-			}
 		}
 		else
 		{
@@ -397,20 +400,16 @@ std::deque<std::pair<int,
 			hasStraggler = true;
 		}
 	}
-	std::deque<std::pair<int, size_t>> largerElements;
+	std::deque<std::pair<int, size_t> > largerElements;
 	for (size_t i = 0; i < pairs.size(); ++i)
-	{
 		largerElements.push_back(pairs[i].first);
-	}
 	// Recursively sort larger elements
 	std::deque<std::pair<int,
-		size_t>> mainChain = sortWithIndexDeque(largerElements);
-	std::deque<std::pair<int, size_t>> pending;
+		size_t> > mainChain = sortWithIndexDeque(largerElements);
+	std::deque<std::pair<int, size_t> > pending;
 	for (size_t i = 0; i < pairs.size(); ++i)
-	{
 		pending.push_back(pairs[i].second);
-	}
-	std::deque<std::pair<int, size_t>> reorderedPending;
+	std::deque<std::pair<int, size_t> > reorderedPending;
 	for (size_t i = 0; i < mainChain.size(); ++i)
 	{
 		for (size_t j = 0; j < largerElements.size(); ++j)
@@ -423,38 +422,32 @@ std::deque<std::pair<int,
 		}
 	}
 	if (hasStraggler)
-	{
 		reorderedPending.push_back(straggler);
-	}
 	std::deque<std::pair<int,
-		size_t>> result = insertPendingWithIndexDeque(mainChain,
+		size_t> > result = insertPendingWithIndexDeque(mainChain,
 			reorderedPending);
-	return result;
+	return (result);
 }
 
 std::deque<std::pair<int,
-	size_t>> PmergeMe::insertPendingWithIndexDeque(std::deque<std::pair<int,
-	size_t>> &mainChain, std::deque<std::pair<int, size_t>> &pending)
+	size_t> > PmergeMe::insertPendingWithIndexDeque(std::deque<std::pair<int,
+	size_t> > &mainChain, std::deque<std::pair<int, size_t> > &pending)
 {
 	size_t	pendingIndex;
-		size_t pairPosition;
+	size_t	pairPosition;
 	size_t	pos;
 
 	if (pending.empty())
-		return mainChain;
-	std::deque<std::pair<int, size_t>> result = mainChain;
+		return (mainChain);
+	std::deque<std::pair<int, size_t> > result = mainChain;
 	std::vector<size_t> mainChainPositions(mainChain.size());
 	for (size_t i = 0; i < mainChain.size(); ++i)
-	{
 		mainChainPositions[i] = i;
-	}
 	result.insert(result.begin(), pending[0]);
 	for (size_t i = 0; i < mainChainPositions.size(); ++i)
-	{
 		mainChainPositions[i]++;
-	}
 	if (pending.size() == 1)
-		return result;
+		return (result);
 	std::vector<size_t> insertionOrder = buildInsertionOrder(pending.size());
 	for (size_t i = 0; i < insertionOrder.size(); ++i)
 	{
@@ -462,29 +455,23 @@ std::deque<std::pair<int,
 		std::pair<int, size_t> valueToInsert = pending[pendingIndex];
 		// Straggler has no pair in mainChain — search the entire result
 		if (pendingIndex < mainChainPositions.size())
-		{
 			pairPosition = mainChainPositions[pendingIndex];
-		}
 		else
-		{
 			pairPosition = result.size();
-		}
 		pos = binarySearchWithIndexDeque(result, valueToInsert.first,
 				pairPosition, pairPosition);
 		result.insert(result.begin() + pos, valueToInsert);
 		for (size_t j = 0; j < mainChainPositions.size(); ++j)
 		{
 			if (mainChainPositions[j] >= pos)
-			{
 				mainChainPositions[j]++;
-			}
 		}
 	}
-	return result;
+	return (result);
 }
 
 size_t PmergeMe::binarySearchWithIndexDeque(const std::deque<std::pair<int,
-	size_t>> &arr, int value, size_t end, size_t pairPos)
+	size_t> > &arr, int value, size_t end, size_t pairPos)
 {
 	size_t	left;
 	size_t	right;
@@ -496,20 +483,14 @@ size_t PmergeMe::binarySearchWithIndexDeque(const std::deque<std::pair<int,
 	{
 		mid = left + (right - left) / 2;
 		if (mid == pairPos)
-		{
 			right = mid;
-		}
 		else
 		{
 			if (compareDeque(arr[mid].first, value))
-			{
 				left = mid + 1;
-			}
 			else
-			{
 				right = mid;
-			}
 		}
 	}
-	return left;
+	return (left);
 }

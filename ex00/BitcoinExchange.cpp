@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   BitcoinExchange.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igngonza <igngonza@student.42.fr>          +#+  +:+       +#+        */
+/*   By: igngonza <igngonza@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 11:22:28 by igngonza          #+#    #+#             */
-/*   Updated: 2026/02/18 15:20:18 by igngonza         ###   ########.fr       */
+/*   Updated: 2026/02/20 08:47:47 by igngonza         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,17 @@
 
 BitcoinExchange::BitcoinExchange()
 {
+}
+
+BitcoinExchange::BitcoinExchange(const BitcoinExchange &other) : database(other.database)
+{
+}
+
+BitcoinExchange &BitcoinExchange::operator=(const BitcoinExchange &other)
+{
+	if (this != &other)
+		database = other.database;
+	return (*this);
 }
 
 BitcoinExchange::~BitcoinExchange()
@@ -95,7 +106,7 @@ void BitcoinExchange::parseDatabaseLine(const std::string &line)
 		std::cerr << "Error: invalid rate => " << value << std::endl;
 		return ;
 	}
-	database[date] = rate;
+	this->database[date] = rate;
 }
 
 void BitcoinExchange::parseInputLine(const std::string &line)
