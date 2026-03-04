@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   BitcoinExchange.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igngonza <igngonza@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: igngonza <igngonza@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 11:22:33 by igngonza          #+#    #+#             */
-/*   Updated: 2026/02/20 08:24:00 by igngonza         ###   ########.fr       */
+/*   Updated: 2026/03/04 11:08:00 by igngonza         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,7 @@ class BitcoinExchange
 	void parseInputLine(const std::string &line);
 
 	bool validateDate(const std::string &date) const;
-	bool validateValue(const std::string &value);
 
 	std::string trim(const std::string &str);
-
-	double getRateForDate(const std::string &date);
 };
 #endif

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   BitcoinExchange.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igngonza <igngonza@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: igngonza <igngonza@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 11:22:28 by igngonza          #+#    #+#             */
-/*   Updated: 2026/02/20 08:47:47 by igngonza         ###   ########.fr       */
+/*   Updated: 2026/03/04 11:14:55 by igngonza         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,16 +39,10 @@ void BitcoinExchange::loadDatabase(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());
 	if (!file.is_open())
-	{
-		std::cerr << "Error: could not open the database file" << std::endl;
-		return ;
-	}
+		throw std::runtime_error("Error: could not open the database file");
 	std::string line;
 	if (!std::getline(file, line))
-	{
-		std::cerr << "Error: empty database file" << std::endl;
-		return ;
-	}
+		throw std::runtime_error("Error: empty database file");
 	while (std::getline(file, line))
 	{
 		if (line.empty())
