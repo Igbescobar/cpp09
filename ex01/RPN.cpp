@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RPN.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igngonza <igngonza@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: igngonza <igngonza@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 12:14:34 by igngonza          #+#    #+#             */
-/*   Updated: 2026/02/10 12:25:32 by igngonza         ###   ########.fr       */
+/*   Updated: 2026/03/09 11:20:02 by igngonza         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,64 +15,60 @@
 #include <stack>
 #include <stdexcept>
 
-RPN::RPN() {
-}
+RPN::RPN() {}
 
-RPN::RPN(const RPN &other) {
-    (void)other;
-}
+RPN::RPN(const RPN &other) { (void)other; }
 
 RPN &RPN::operator=(const RPN &other) {
-    (void)other;
-    return *this;
+  (void)other;
+  return *this;
 }
 
-RPN::~RPN() {
-}
+RPN::~RPN() {}
 
 bool RPN::isOperator(const std::string &token) const {
-    return (token == "+" || token == "-" || token == "*" || token == "/");
+  return (token == "+" || token == "-" || token == "*" || token == "/");
 }
 
 int RPN::applyOperation(int a, int b, const std::string &op) const {
-    if (op == "+")
-        return a + b;
-    if (op == "-")
-        return a - b;
-    if (op == "*")
-        return a * b;
-    if (op == "/") {
-        if (b == 0)
-            throw std::runtime_error("division by zero");
-        return a / b;
-    }
-    throw std::runtime_error("invalid operator");
+  if (op == "+")
+    return a + b;
+  if (op == "-")
+    return a - b;
+  if (op == "*")
+    return a * b;
+  if (op == "/") {
+    if (b == 0)
+      throw std::runtime_error("division by zero");
+    return a / b;
+  }
+  throw std::runtime_error("invalid operator");
 }
 
 int RPN::evaluate(const std::string &expr) const {
-    std::stack<int> s;
-    std::stringstream ss(expr);
-    std::string token;
+  std::stack<int> s;
+  std::stringstream ss(expr);
+  std::string token;
 
-    while (ss >> token) {
-        if (token.size() == 1 && std::isdigit(token[0]))
-            s.push(token[0] - '0');
-        else if (isOperator(token)) {
-            if (s.size() < 2)
-                throw std::runtime_error("invalid expression");
-
-            int b = s.top();
-            s.pop();
-            int a = s.top();
-            s.pop();
-
-            s.push(applyOperation(a, b, token));
-        } else
-            throw std::runtime_error("invalid token");
-    }
-
-    if (s.size() != 1)
+  while (ss >> token) {
+    if (token.size() == 1 && std::isdigit(token[0]))
+      s.push(token[0] - '0');
+    else if (isOperator(token)) {
+      if (s.size() < 2)
         throw std::runtime_error("invalid expression");
 
-    return s.top();
+      int b = s.top();
+      s.pop();
+      int a = s.top();
+      s.pop();
+
+      s.push(applyOperation(a, b, token));
+    } else
+      throw std::runtime_error("invalid token");
+  }
+
+  if (s.size() != 1)
+    throw std::runtime_error("invalid expression");
+
+  return s.top();
 }
